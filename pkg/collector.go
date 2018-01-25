@@ -2,8 +2,6 @@ package exporter
 
 import (
 	"io/ioutil"
-	"net/http"
-	"net/url"
 	"regexp"
 	"strconv"
 
@@ -11,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/tomasen/fcgi_client"
 )
 
 var (
@@ -70,34 +69,31 @@ func (c *collector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.slowRequests
 }
 
-func getData(u *url.URL) ([]byte, error) {
-	req := http.Request{
-		Method:     "GET",
-		URL:        u,
-		Proto:      "HTTP/1.1",
-		ProtoMajor: 1,
-		ProtoMinor: 1,
-		Header:     make(http.Header),
-		Host:       u.Host,
-	}
+func getData(u string) ([]byte, error) {
 
-	resp, err := http.DefaultClient.Do(&req)
+	env := make(map[string]string)
+	env["SCRIPT_NAME"] = "/status"
+	env["SCRIPT_FILENAME"] = "/status"
+	env["REQUEST_METHOD"] = "GET"
+
+	fcgi, err := fcgiclient.Dial("tcp", u)
 	if err != nil {
 		return nil, errors.Wrap(err, "HTTP request failed")
 	}
 
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return nil, errors.Errorf("unexpected HTTP status: %d", resp.StatusCode)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
+	resp, err := fcgi.Get(env)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read http body")
+		return nil, errors.Wrap(err, "HTTP request failed")
 	}
 
-	return body, nil
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "HTTP request failed")
+	}
+	//logger.Println(string(content))
+	//log.Println("content:", string(content))
+
+	return content, nil
 }
 
 func (c *collector) Collect(ch chan<- prometheus.Metric) {

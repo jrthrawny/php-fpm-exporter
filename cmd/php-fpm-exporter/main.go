@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	exporter "github.com/bakins/php-fpm-exporter"
+	exporter "github.com/bakins/php-fpm-exporter/pkg"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -43,8 +43,8 @@ var rootCmd = &cobra.Command{
 }
 
 func main() {
-	addr = rootCmd.PersistentFlags().StringP("addr", "", "127.0.0.1:8080", "listen address for metrics handler")
-	endpoint = rootCmd.PersistentFlags().StringP("endpoint", "", "http://127.0.0.1:9000/status", "url for php-fpm status")
+	addr = rootCmd.PersistentFlags().StringP("addr", "", "0.0.0.0:8080", "listen address for metrics handler")
+	endpoint = rootCmd.PersistentFlags().StringP("endpoint", "", "https://127.0.0.1:9000/status", "url for php-fpm status")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Printf("root command failed: %v", err)

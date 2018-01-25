@@ -4,7 +4,6 @@ import (
 	"context"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -21,7 +20,7 @@ import (
 // Exporter handles serving the metrics
 type Exporter struct {
 	addr     string
-	endpoint *url.URL
+	endpoint string
 	logger   *zap.Logger
 }
 
@@ -48,9 +47,8 @@ func New(options ...OptionsFunc) (*Exporter, error) {
 		e.logger = l
 	}
 
-	if e.endpoint == nil {
-		u, _ := url.Parse("http://localhost:9000/status")
-		e.endpoint = u
+	if len(e.endpoint) == 0 {
+		e.endpoint = "localhost:9000/status"
 	}
 	return e, nil
 }
@@ -82,11 +80,11 @@ func SetAddress(addr string) func(*Exporter) error {
 // Generally only used when create a new Exporter.
 func SetEndpoint(rawurl string) func(*Exporter) error {
 	return func(e *Exporter) error {
-		u, err := url.Parse(rawurl)
+		host, port, err := net.SplitHostPort(rawurl)
 		if err != nil {
-			return errors.Wrap(err, "failed to parse url")
+			return errors.Wrapf(err, "invalid address")
 		}
-		e.endpoint = u
+		e.endpoint = net.JoinHostPort(host, port)
 		return nil
 	}
 }

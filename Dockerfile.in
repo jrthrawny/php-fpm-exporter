@@ -1,0 +1,7 @@
+FROM alpine:3.6
+
+COPY ./bin/linux/php-fpm-exporter /php-fpm-exporter
+RUN chmod ugo+x /php-fpm-exporter
+USER nobody:nobody
+
+ENTRYPOINT [ "/php-fpm-exporter" ]

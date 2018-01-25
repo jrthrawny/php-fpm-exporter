@@ -1,3 +1,5 @@
+# Add these lines to the .gitignore in each directory with a Makefile
+
 # Temporary build-tools artifacts to be ignored
 /.go/
 /.gotmp/
@@ -10,4 +12,4 @@
 /.dockerfile
 /VERSION.txt
 /.docker_image
-*.sha256.txt
+
